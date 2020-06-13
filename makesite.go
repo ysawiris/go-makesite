@@ -40,7 +40,7 @@ func renderTemplate(filename string, data string) {
 	t := template.Must(template.New("template.tmpl").ParseFiles(filename))
 
 	var err error
-	// Print out usind Stdout
+	// Print out using Stdout
 	err = t.Execute(os.Stdout, c)
 	if err != nil {
 		panic(err)
@@ -56,15 +56,18 @@ func changeExtHTML(filename string) string {
 }
 
 func writeTemplateToFile(tmplName string, data string) {
+	// var to hold content
 	c := post{Description: readFile(data)}
+	// render given content in the template
 	t := template.Must(template.New("template.tmpl").ParseFiles(tmplName))
-
+	// change file extension
 	file := changeExtHTML(data)
+	// Create new file
 	f, err := os.Create(file)
 	if err != nil {
 		panic(err)
 	}
-
+	// render template
 	err = t.Execute(f, c)
 	if err != nil {
 		panic(err)
@@ -72,11 +75,11 @@ func writeTemplateToFile(tmplName string, data string) {
 }
 
 func main() {
-	filePtr := flag.String("file", "", "txt file to be converted to html file")
+	fileParse := flag.String("file", "", "txt file will be converted to html file")
 	flag.Parse()
-	if *filePtr != "" {
-		renderTemplate("template.tmpl", readFile(*filePtr))
-		writeTemplateToFile("template.tmpl", *filePtr)
+	if *fileParse != "" {
+		renderTemplate("template.tmpl", readFile(*fileParse))
+		writeTemplateToFile("template.tmpl", *fileParse)
 	} else {
 		renderTemplate("template.tmpl", readFile("first-post.txt"))
 		writeTemplateToFile("template.tmpl", "test.txt")
