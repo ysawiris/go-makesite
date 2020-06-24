@@ -8,9 +8,9 @@ import (
 	"text/template"
 )
 
-//
+// global variable
 type post struct {
-	Description string
+	Content string
 }
 
 func readFile(filename string) string {
@@ -35,7 +35,7 @@ func writeFile(fileContents string) {
 }
 func renderTemplate(filename string, data string) {
 	// var that holds content
-	c := post{Description: data}
+	c := post{Content: data}
 	// render given content in the template
 	t := template.Must(template.New("template.tmpl").ParseFiles(filename))
 
@@ -51,13 +51,13 @@ func changeExtHTML(filename string) string {
 	// var to hold ext ending
 	ext := ".html"
 	// Deletes extension ending and adds new one
-	withExt := strings.Split(filename, ".")[0] + ext
-	return withExt
+	addExt := strings.Split(filename, ".")[0] + ext
+	return addExt
 }
 
 func writeTemplateToFile(tmplName string, data string) {
 	// var to hold content
-	c := post{Description: readFile(data)}
+	c := post{Content: readFile(data)}
 	// render given content in the template
 	t := template.Must(template.New("template.tmpl").ParseFiles(tmplName))
 	// change file extension
@@ -74,9 +74,33 @@ func writeTemplateToFile(tmplName string, data string) {
 	}
 }
 
+func checkTextFile(filename string) bool {
+	if strings.Contains(filename, ".") {
+		return strings.Split(filename, ".")[1] == "txt"
+	}
+	return false
+}
+
 func main() {
 	fileParse := flag.String("file", "", "txt file will be converted to html file")
+	directory := flag.String("dir", "", "search files in this directory")
 	flag.Parse()
+	if *directory != "" {
+		textFiles, err := ioutil.ReadDir(*directory)
+		if err != nil {
+			panic(err)
+		}
+		var numFiles int
+		for _, file := range textFiles {
+			filename := file.Name()
+			if checkTextFile(filename) == true {
+				renderTemplate("template.tmpl", readFile(filename))
+				writeTemplateToFile("template.tmpl", filename)
+				numFiles++
+			}
+		}
+	}
+
 	if *fileParse != "" {
 		renderTemplate("template.tmpl", readFile(*fileParse))
 		writeTemplateToFile("template.tmpl", *fileParse)
