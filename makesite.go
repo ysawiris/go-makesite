@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"flag"
+	"fmt"
 	"image/jpeg"
 	"io/ioutil"
 	"os"
@@ -16,6 +17,7 @@ import (
 // global variable
 type post struct {
 	Content string
+	Avatar  string
 }
 
 var a = air.Default
@@ -41,9 +43,9 @@ func writeFile(fileContents string) {
 	}
 }
 
-func renderTemplate(filename string, data string) {
+func renderTemplate(filename string, data string, url string) {
 	// var that holds content
-	c := post{Content: data}
+	c := post{Content: data, Avatar: url}
 	// render given content in the template
 	t := template.Must(template.New("template.tmpl").ParseFiles(filename))
 
@@ -63,9 +65,9 @@ func changeExtHTML(filename string) string {
 	return addExt
 }
 
-func writeTemplateToFile(tmplName string, data string) {
+func writeTemplateToFile(tmplName string, data string, url string) {
 	// var to hold content
-	c := post{Content: readFile(data)}
+	c := post{Content: readFile(data), Avatar: url}
 	// render given content in the template
 	t := template.Must(template.New("template.tmpl").ParseFiles(tmplName))
 	// change file extension
@@ -111,6 +113,7 @@ func identicon(req *air.Request, res *air.Response) error {
 func main() {
 	fileParse := flag.String("file", "", "txt file will be converted to html file")
 	directory := flag.String("dir", "", "search files in this directory")
+	avatarFlag := flag.String("avatar", "Default Avatar", "add avatar to your profile")
 	flag.Parse()
 	if *directory != "" {
 		textFiles, err := ioutil.ReadDir(*directory)
@@ -121,19 +124,23 @@ func main() {
 		for _, file := range textFiles {
 			filename := file.Name()
 			if checkTextFile(filename) == true {
-				renderTemplate("template.tmpl", readFile(filename))
-				writeTemplateToFile("template.tmpl", filename)
+				renderTemplate("template.tmpl", readFile(filename), *avatarFlag)
+				writeTemplateToFile("template.tmpl", filename, *avatarFlag)
 				numFiles++
 			}
 		}
 	}
 
 	if *fileParse != "" {
-		renderTemplate("template.tmpl", readFile(*fileParse))
-		writeTemplateToFile("template.tmpl", *fileParse)
+		renderTemplate("template.tmpl", readFile(*fileParse), *avatarFlag)
+		writeTemplateToFile("template.tmpl", *fileParse, *avatarFlag)
 	} else {
-		renderTemplate("template.tmpl", readFile("first-post.txt"))
-		writeTemplateToFile("template.tmpl", "test.txt")
+		renderTemplate("template.tmpl", readFile("first-post.txt"), *avatarFlag)
+		writeTemplateToFile("template.tmpl", "test.txt", *avatarFlag)
+	}
+
+	if *avatarFlag != "Default Avatar" {
+		fmt.Printf(*avatarFlag)
 	}
 
 	a.DebugMode = true
