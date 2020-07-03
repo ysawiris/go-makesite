@@ -1,17 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"flag"
+	"image/jpeg"
 	"io/ioutil"
 	"os"
 	"strings"
 	"text/template"
+
+	"github.com/aofei/air"
+	"github.com/aofei/cameron"
 )
 
 // global variable
 type post struct {
 	Content string
 }
+
+var a = air.Default
 
 func readFile(filename string) string {
 	// Reading a File
@@ -33,6 +40,7 @@ func writeFile(fileContents string) {
 		panic(err)
 	}
 }
+
 func renderTemplate(filename string, data string) {
 	// var that holds content
 	c := post{Content: data}
@@ -81,6 +89,25 @@ func checkTextFile(filename string) bool {
 	return false
 }
 
+func identicon(req *air.Request, res *air.Response) error {
+	buf := bytes.Buffer{}
+	jpeg.Encode(
+		&buf,
+		cameron.Identicon(
+			[]byte(req.Param("Name").Value().String()),
+			540,
+			60,
+		),
+		&jpeg.Options{
+			Quality: 100,
+		},
+	)
+
+	res.Header.Set("Content-Type", "image/jpeg")
+
+	return res.Write(bytes.NewReader(buf.Bytes()))
+}
+
 func main() {
 	fileParse := flag.String("file", "", "txt file will be converted to html file")
 	directory := flag.String("dir", "", "search files in this directory")
@@ -108,4 +135,8 @@ func main() {
 		renderTemplate("template.tmpl", readFile("first-post.txt"))
 		writeTemplateToFile("template.tmpl", "test.txt")
 	}
+
+	a.DebugMode = true
+	a.GET("/identicons/:Name", identicon)
+	a.Serve()
 }
